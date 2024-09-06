@@ -1,2 +1,0 @@
-# GRA-Praktikum
-test marokha  
