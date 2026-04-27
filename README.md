@@ -1,5 +1,5 @@
 
-# Cache Architecture Simulator
+# Cache Simulator
 
 **Cycle-Accurate Performance Modeling for the Grundlagen Rechnerarchitektur (GRA) Lab**
 
