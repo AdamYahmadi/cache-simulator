@@ -1,75 +1,66 @@
-# Der systemc Pfad ist in der Environment variable SYSTEMC_HOME gesetzt.
-# ---------------------------------------
-# CONFIGURATION START
-# ---------------------------------------
+# -------------------------------------------------------------------
+# InfraLens: Cache Simulator Build System
+# -------------------------------------------------------------------
+# SystemC path must be set in the environment variable SYSTEMC_HOME.
 
-# Entry point for the program and target name
-MAIN := src/main.c
-
-# Additional source files
+# --- Project Configuration ---
+TARGET  := systemcc
+MAIN    := src/main.c
 SOURCES := src/simulation.cpp
-
-# Header files
 HEADERS := src/simulation.hpp
+SCPATH  := $(SYSTEMC_HOME)
 
-# Target name
-TARGET := systemcc
-
-# Path to your systemc installation from the environment variable
-SCPATH := $(SYSTEMC_HOME)
-
-# Additional flags for the compiler
+# --- Compiler & Linker Flags ---
 CXXFLAGS := -std=c++14 -I$(SCPATH)/include
-LDFLAGS := -L$(SCPATH)/lib -lsystemc -lm
+LDFLAGS  := -L$(SCPATH)/lib -lsystemc -lm
 
-# ---------------------------------------
-# CONFIGURATION END
-# ---------------------------------------
-
-# Determine if clang or gcc is available
+# --- Environment Detection ---
 CXX := $(shell command -v g++ || command -v clang++)
+CC  := $(shell command -v gcc || command -v clang)
+
+# Fail-safe check for compilers
 ifeq ($(strip $(CXX)),)
-    $(error Neither clang++ nor g++ is available. Exiting.)
+    $(error Error: No C++ compiler (g++/clang++) found in PATH.)
 endif
-
-CC := $(shell command -v gcc || command -v clang)
 ifeq ($(strip $(CC)),)
-    $(error Neither clang nor gcc is available. Exiting.)
+    $(error Error: No C compiler (gcc/clang) found in PATH.)
 endif
 
-# Add rpath except for MacOS
+# OS-specific linker adjustments (rpath for Linux, excluded for Darwin/macOS)
 UNAME_S := $(shell uname -s)
-
 ifneq ($(UNAME_S), Darwin)
     LDFLAGS += -Wl,-rpath=$(SCPATH)/lib
 endif
 
-# Default to release build for both app and library
+# --- Build Targets ---
+.PHONY: all debug release clean run
+
+# Default target
 all: debug
 
-# Debug build
+# Debug build: includes symbols for GDB
 debug: CXXFLAGS += -g
 debug: $(TARGET)
 
-# Release build
+# Release build: optimizes for performance
 release: CXXFLAGS += -O2
 release: $(TARGET)
 
-# Recipe for building the program
+# --- Linker Recipe ---
 $(TARGET): $(MAIN:.c=.o) $(SOURCES:.cpp=.o)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
-# Clean up
-clean:
-	rm -f $(TARGET) $(SOURCES:.cpp:.o) $(MAIN:.c:.o)
+# --- Compilation Rules ---
 
-# Rule to compile .cpp files to .o files
+# C++ Source Compilation
 %.o: %.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Rule to compile .c files to .o files
+# C Source Compilation
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Run the simulation
-.PHONY: all debug release clean run
+# --- Maintenance ---
+clean:
+	@echo "Cleaning project..."
+	rm -f $(TARGET) src/*.o
