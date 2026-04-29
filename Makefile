@@ -1,6 +1,3 @@
-# -------------------------------------------------------------------
-# InfraLens: Cache Simulator Build System
-# -------------------------------------------------------------------
 # SystemC path must be set in the environment variable SYSTEMC_HOME.
 
 # --- Project Configuration ---
